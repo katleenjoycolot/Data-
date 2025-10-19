@@ -263,13 +263,14 @@ with tabs[0]:
                 'Damage Agriculture':['0','0','422.510.5','10,000','0','0']
             })
             st.write("Example data preview:")
-            st.dataframe(df_raw.head())
+            st.table(df_raw.head())
 
         # show raw data and columns
         with st.expander("Preview raw data (first 20 rows)"):
-            st.dataframe(df_raw.head(20))
+            st.table(df_raw.head(20))
         st.write("Column names:")
         st.write(list(df_raw.columns))
+
 
 # ------------------------------
 # Cleaning & EDA Tab
