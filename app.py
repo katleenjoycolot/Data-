@@ -21,6 +21,93 @@ import matplotlib.pyplot as plt
 import warnings
 warnings.filterwarnings("ignore")
 
+# --- 🌸 Custom Pink Theme CSS ---
+pink_theme = """
+<style>
+/* Main background and text */
+body {
+    background-color: #fff5f7;
+    color: #3a3a3a;
+}
+
+/* Sidebar styling */
+[data-testid="stSidebar"] {
+    background-color: #ffb6c1 !important;
+    color: #3a3a3a !important;
+}
+[data-testid="stSidebar"] * {
+    color: #3a3a3a !important;
+    font-weight: 500;
+}
+
+/* Sidebar title and headers */
+[data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3 {
+    color: #3a3a3a !important;
+    font-weight: 600;
+}
+
+/* Tabs */
+.stTabs [data-baseweb="tab-list"] {
+    background-color: #ffc0cb !important;
+    border-radius: 10px;
+    padding: 6px;
+}
+.stTabs [data-baseweb="tab"] {
+    color: #3a3a3a !important;
+    font-weight: 600;
+}
+.stTabs [aria-selected="true"] {
+    background-color: #ff69b4 !important;
+    color: white !important;
+    border-radius: 8px;
+}
+
+/* Buttons */
+.stButton>button {
+    background-color: #ff69b4 !important;
+    color: white !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    border: none !important;
+    transition: 0.3s ease-in-out;
+}
+.stButton>button:hover {
+    background-color: #ff1493 !important;
+    transform: scale(1.03);
+}
+
+/* Metrics and headers */
+.block-container h1, .block-container h2, .block-container h3 {
+    color: #d63384;
+    font-weight: 700;
+}
+
+/* Tables and cards */
+[data-testid="stTable"], .stDataFrame {
+    background-color: white !important;
+    border: 2px solid #ffc0cb !important;
+    border-radius: 10px;
+}
+
+/* Info, success, and warning boxes */
+.stAlert {
+    border-radius: 8px !important;
+    font-weight: 500 !important;
+}
+div[data-baseweb="notification"] {
+    background-color: #ffe6f0 !important;
+}
+
+/* Markdown links */
+a {
+    color: #d63384 !important;
+    font-weight: 600;
+}
+</style>
+"""
+st.markdown(pink_theme, unsafe_allow_html=True)
+
+
 st.set_page_config(layout="wide", page_title="Flood Pattern Analysis Dashboard")
 
 # ------------------------------
