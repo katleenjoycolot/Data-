@@ -21,7 +21,6 @@ import matplotlib.pyplot as plt
 import warnings
 warnings.filterwarnings("ignore")
 
-
 st.set_page_config(layout="wide", page_title="Flood Pattern Analysis Dashboard")
 
 # ------------------------------
@@ -296,72 +295,19 @@ with tabs[1]:
             if show_explanations:
                 st.markdown("**Explanation:** This histogram shows distribution of `Water Level` after cleaning non-numeric characters and imputing missing values with the median. The boxplot margin highlights potential outliers. Use this to detect skew and extreme events.")
 
-       # Monthly flood probability
-import calendar
-import plotly.express as px
-import streamlit as st
-import pandas as pd
-
-if 'Month' in df.columns:
-    # create flood_occurred column if not exists
-    if 'flood_occurred' not in df.columns:
-        df['flood_occurred'] = (df['Water Level'].fillna(0) > 0).astype(int)
-
-    st.subheader("Monthly Flood Probability")
-
-    # --- SAFE month name conversion ---
-    def get_month_name(val):
-        """Return proper month name from number or string."""
-        if pd.isnull(val):
-            return None
-        try:
-            num = int(val)
-            if 1 <= num <= 12:
-                return calendar.month_name[num]
-        except:
-            pass
-        # if already text like "Jan" or "January"
-        val_str = str(val).strip().title()
-        months = {m: m for m in calendar.month_name[1:]}
-        months_abbr = {m: calendar.month_name[i] for i, m in enumerate(calendar.month_abbr) if m}
-        all_months = {**months, **months_abbr}
-        return all_months.get(val_str, None)
-
-    df['Month_Name'] = df['Month'].apply(get_month_name)
-
-    # drop rows with invalid month values
-    valid_df = df.dropna(subset=['Month_Name'])
-
-    if not valid_df.empty:
-        # group and calculate flood probability
-        m_stats = valid_df.groupby('Month_Name')['flood_occurred'].agg(['sum', 'count']).reset_index()
-        m_stats['probability'] = m_stats['sum'] / m_stats['count']
-
-        # sort by chronological order (Jan–Dec)
-        m_stats['Month_Number'] = m_stats['Month_Name'].apply(lambda x: list(calendar.month_name).index(x))
-        m_stats = m_stats.sort_values('Month_Number')
-
-        # plot
-        fig = px.bar(
-            m_stats,
-            x='Month_Name',
-            y='probability',
-            title="Flood Probability by Month",
-            text='probability'
-        )
-        fig.update_traces(texttemplate='%{text:.2f}', textposition='outside')
-        fig.update_layout(xaxis_title="Month", yaxis_title="Flood Probability")
-        st.plotly_chart(fig, use_container_width=True)
-
-        # explanation
-        if show_explanations:
-            st.markdown("""
-            **Explanation:**  
-            Probability = (# of rows with Water Level > 0) ÷ (total rows in that month).  
-            Higher bars mean that the month historically had more flood occurrences in your dataset.
-            """)
-    else:
-        st.warning("⚠️ No valid month values found in the 'Month' column.")
+        # Monthly flood probability
+        if 'Month' in df.columns:
+            # create flood_occurred column if not exists
+            if 'flood_occurred' not in df.columns:
+                df['flood_occurred'] = (df['Water Level'].fillna(0) > 0).astype(int)
+            st.subheader("Monthly flood probability")
+            m_stats = df.groupby('Month')['flood_occurred'].agg(['sum','count']).reset_index()
+            m_stats['probability'] = m_stats['sum']/m_stats['count']
+            m_stats = m_stats.sort_values('probability', ascending=False)
+            fig = px.bar(m_stats, x='Month', y='probability', title="Flood Probability by Month", text='probability')
+            st.plotly_chart(fig, use_container_width=True)
+            if show_explanations:
+                st.markdown("**Explanation:** Probability = (# rows with Water Level>0) / (rows per month). Higher bars mean that month historically had more flood occurrences in your dataset.")
 
         # Municipal flood probabilities
         if 'Municipality' in df.columns:
@@ -414,67 +360,41 @@ with tabs[2]:
 # ------------------------------
 # Flood Prediction (RandomForest) Tab
 # ------------------------------
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import classification_report, accuracy_score
-import pandas as pd
-
 with tabs[3]:
     st.header("Flood occurrence prediction — RandomForest")
-
     if 'df' not in locals():
         st.warning("Do data cleaning first.")
     else:
-        # Prepare features: water level OR numeric + month dummies
+        # Prepare features: water level OR numeric + month dummies (we'll train both simple and refined)
         st.markdown("We train a RandomForest to predict `flood_occurred` (binary).")
 
-        # Create target variable
-        df['flood_occurred'] = (df['Water Level'] > 0).astype(int)
+        # create target if not exists
+        df['flood_occurred'] = (df['Water Level'].fillna(0) > 0).astype(int)
 
-        # Feature set
+        # basic feature set
         month_dummies = pd.get_dummies(df['Month'].astype(str).fillna('Unknown'), prefix='Month')
-        X_basic = pd.concat([
-            df[['Water Level', 'No. of Families affected', 'Damage Infrastructure', 'Damage Agriculture']].fillna(0),
-            month_dummies
-        ], axis=1)
+        X_basic = pd.concat([df[['Water Level','No. of Families affected','Damage Infrastructure','Damage Agriculture']].fillna(0), month_dummies], axis=1)
         y = df['flood_occurred']
 
-        # Train/test split
+        # train/test split
         Xtr, Xte, ytr, yte = train_test_split(X_basic, y, test_size=0.3, random_state=42)
 
-        # Model training
         model = RandomForestClassifier(random_state=42)
         model.fit(Xtr, ytr)
         ypred = model.predict(Xte)
         acc = accuracy_score(yte, ypred)
 
-        # Display header
-        st.subheader("📊 Basic RandomForest Results")
+        st.subheader("Basic RandomForest results")
+        st.write(f"Accuracy (test): {acc:.4f}")
 
-        # Accuracy table
-        acc_table = pd.DataFrame({
-            "Metric": ["Accuracy (test)"],
-            "Value": [f"{acc:.4f}"]
-        })
-        st.table(acc_table)
+        # show classification report
+        st.text("Classification report:")
+        st.text(classification_report(yte, ypred))
 
-        # Classification report in tabular format
-        report = classification_report(yte, ypred, output_dict=True)
-        report_df = pd.DataFrame(report).transpose().round(3)
-
-        st.markdown("### 📈 Classification Report")
-        st.table(report_df)
-
-        # Optional explanation
         if show_explanations:
-            st.markdown("""
-            **🧠 Explanation:**  
-            RandomForest uses many decision trees and aggregates their votes.  
-            High accuracy may indicate a strong signal in the features, but always check class balance and overfitting.  
-            Use the classification report to inspect precision and recall per class.
-            """)
+            st.markdown("**Explanation:** RandomForest uses many decision trees and aggregates their votes. High accuracy may indicate a strong signal in the features, but always check class balance and overfitting. Use the classification report to inspect precision/recall per class.")
 
- # feature importances
+        # feature importances
         fi = pd.Series(model.feature_importances_, index=X_basic.columns).sort_values(ascending=False).head(10)
         st.subheader("Top feature importances")
         st.bar_chart(fi)
@@ -502,84 +422,45 @@ with tabs[3]:
             if show_explanations:
                 st.markdown("**Explanation:** This uses median numeric values and swaps month dummies to estimate flood likelihood per month. It's a model-based estimate, not a raw frequency.")
 
-
 # ------------------------------
 # Flood Severity Tab
 # ------------------------------
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import classification_report, accuracy_score
-import pandas as pd
-
 with tabs[4]:
-    st.header("🌊 Flood Severity Classification")
-
+    st.header("Flood severity classification")
     if 'df' not in locals():
-        st.warning("⚠️ Please perform data cleaning first.")
+        st.warning("Do data cleaning first.")
     else:
-        # ---------------- CREATE TARGET COLUMN ----------------
+        # create severity target
         df['Flood_Severity'] = df['Water Level'].apply(categorize_severity)
+        st.subheader("Severity distribution")
+        st.write(df['Flood_Severity'].value_counts())
 
-        # ---------------- SEVERITY DISTRIBUTION ----------------
-        st.subheader("📊 Severity Distribution")
-        sev_counts = df['Flood_Severity'].value_counts().reset_index()
-        sev_counts.columns = ['Severity Level', 'Count']
-        st.table(sev_counts)
-
-        # ---------------- FEATURE SETUP ----------------
-        base_feats = ['No. of Families affected', 'Damage Infrastructure', 'Damage Agriculture']
+        # features: numeric + dummies for month, municipality, barangay (if present)
+        base_feats = ['No. of Families affected','Damage Infrastructure','Damage Agriculture']
         month_d = pd.get_dummies(df['Month'].astype(str).fillna('Unknown'), prefix='Month')
         muni_d = pd.get_dummies(df['Municipality'].astype(str).fillna('Unknown'), prefix='Municipality') if 'Municipality' in df.columns else pd.DataFrame()
         brgy_d = pd.get_dummies(df['Barangay'].astype(str).fillna('Unknown'), prefix='Barangay') if 'Barangay' in df.columns else pd.DataFrame()
         Xsev = pd.concat([df[base_feats].fillna(0), month_d, muni_d, brgy_d], axis=1)
         ysev = df['Flood_Severity']
 
-        # ---------------- CLASS BALANCE TABLE ----------------
-        st.subheader("⚖️ Class Counts")
-        class_counts = ysev.value_counts().reset_index()
-        class_counts.columns = ['Flood Severity', 'Occurrences']
-        st.table(class_counts)
+        # check class imbalance
+        st.write("Class counts:")
+        st.write(ysev.value_counts())
 
-        # ---------------- MODEL TRAINING ----------------
+        # train
         try:
-            Xtr_s, Xte_s, ytr_s, yte_s = train_test_split(
-                Xsev, ysev, test_size=0.3, random_state=42, stratify=ysev
-            )
-
+            Xtr_s, Xte_s, ytr_s, yte_s = train_test_split(Xsev, ysev, test_size=0.3, random_state=42, stratify=ysev)
             model_sev = RandomForestClassifier(random_state=42)
             model_sev.fit(Xtr_s, ytr_s)
             ypred_s = model_sev.predict(Xte_s)
             acc_s = accuracy_score(yte_s, ypred_s)
-
-            # ---------------- RESULTS TABLES ----------------
-            st.subheader("✅ Severity Model Results")
-
-            # Accuracy table
-            acc_table = pd.DataFrame({
-                'Metric': ['Accuracy (test)'],
-                'Value': [f"{acc_s:.4f}"]
-            })
-            st.table(acc_table)
-
-            # Classification report (tabular)
-            report = classification_report(yte_s, ypred_s, output_dict=True, zero_division=0)
-            report_df = pd.DataFrame(report).transpose().round(3)
-
-            st.markdown("### 📈 Classification Report (Low / Medium / High)")
-            st.table(report_df)
-
-            # ---------------- EXPLANATION ----------------
+            st.subheader("Severity model results")
+            st.write(f"Accuracy: {acc_s:.4f}")
+            st.text(classification_report(yte_s, ypred_s))
             if show_explanations:
-                st.markdown("""
-                **🧠 Explanation:**  
-                This multi-class RandomForest predicts flood severity levels — **Low**, **Medium**, or **High**.  
-                Class imbalance (e.g., fewer 'High' floods) can reduce recall for rare classes.  
-                For production use, consider resampling (SMOTE) or class-weight adjustments.
-                """)
-
+                st.markdown("**Explanation:** Multi-class RandomForest predicting Low/Medium/High. Imbalanced datasets often produce poor recall for rare classes (High). Consider resampling or class-weighted models for real deployments.")
         except Exception as e:
-            st.error(f"❌ Could not train severity model: {e}")
-
+            st.error(f"Could not train severity model: {e}")
 
 # ------------------------------
 # Time Series (SARIMA)
