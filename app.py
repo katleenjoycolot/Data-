@@ -21,8 +21,6 @@ import matplotlib.pyplot as plt
 import warnings
 warnings.filterwarnings("ignore")
 
-st.markdown(pink_theme, unsafe_allow_html=True)
-
 
 st.set_page_config(layout="wide", page_title="Flood Pattern Analysis Dashboard")
 
