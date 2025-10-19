@@ -230,46 +230,67 @@ show_explanations = st.sidebar.checkbox("Show explanations below outputs", value
 tabs = st.tabs(["Data Upload", "Data Cleaning & EDA", "Clustering (KMeans)", "Flood Prediction (RF)", "Flood Severity", "Time Series (SARIMA)", "Tutorial"])
 
 # ------------------------------
-# Data Upload Tab
+# 🌊 Data Upload Tab
 # ------------------------------
 with tabs[0]:
-    st.header("Data Upload")
+    st.markdown("<h2 class='main-title'>📂 Data Upload & Overview</h2>", unsafe_allow_html=True)
+
+    # --- 1️⃣ Upload Instructions ---
     if uploaded_file is None and not use_example:
-        st.info("Upload a CSV to begin or toggle 'Use example dataset' in the sidebar.")
+        st.info("📤 Please upload a CSV or Excel file to begin, or toggle **'Use example dataset'** in the sidebar.")
     else:
+        # --- 2️⃣ Load Uploaded or Example Data ---
         if uploaded_file is not None:
             try:
-                if uploaded_file.name.endswith('.xlsx'):
+                file_name = uploaded_file.name
+                if file_name.endswith('.xlsx'):
                     df_raw = pd.read_excel(uploaded_file)
                 else:
                     df_raw = pd.read_csv(uploaded_file)
-                st.success(f"Loaded `{uploaded_file.name}` — {df_raw.shape[0]} rows, {df_raw.shape[1]} columns")
+
+                st.success(f"✅ Loaded **{file_name}** — **{df_raw.shape[0]:,} rows**, **{df_raw.shape[1]} columns**.")
             except Exception as e:
-                st.error(f"Failed to read file: {e}")
+                st.error(f"❌ Failed to read file: {e}")
                 st.stop()
         else:
-            # Create a minimal example dataset that mimics your structure
-            st.info("Using a small synthetic example dataset (you should upload your real file for final results).")
+            # Example dataset for demonstration
+            st.warning("⚠️ Using a **synthetic example dataset** (for testing only). Upload your real file for accurate results.")
             df_raw = pd.DataFrame({
-                'Year':[2018,2018,2019,2019,2020,2020],
-                'Month':['JANUARY','FEBRUARY','DECEMBER','FEBRUARY','MAY','NOVEMBER'],
-                'Day':[10,5,12,20,1,15],
-                'Municipality':['Bunawan']*6,
-                'Barangay':['Poblacion','Imelda','Poblacion','Mambalili','Bunawan Brook','Poblacion'],
-                'Flood Cause':['LPA','LPA','Easterlies','AURING','Shearline','LPA'],
-                'Water Level':['5 ft.','8 ft','12ft','20ft','nan','3 ft'],
-                'No. of Families affected':[10,20,50,200,0,5],
-                'Damage Infrastructure':['0','0','1,000','5,000','0','0'],
-                'Damage Agriculture':['0','0','422.510.5','10,000','0','0']
+                'Year': [2018, 2018, 2019, 2019, 2020, 2020],
+                'Month': ['JANUARY', 'FEBRUARY', 'DECEMBER', 'FEBRUARY', 'MAY', 'NOVEMBER'],
+                'Day': [10, 5, 12, 20, 1, 15],
+                'Municipality': ['Bunawan'] * 6,
+                'Barangay': ['Poblacion', 'Imelda', 'Poblacion', 'Mambalili', 'Bunawan Brook', 'Poblacion'],
+                'Flood Cause': ['LPA', 'LPA', 'Easterlies', 'AURING', 'Shearline', 'LPA'],
+                'Water Level': ['5 ft.', '8 ft', '12ft', '20ft', 'nan', '3 ft'],
+                'No. of Families affected': [10, 20, 50, 200, 0, 5],
+                'Damage Infrastructure': ['0', '0', '1,000', '5,000', '0', '0'],
+                'Damage Agriculture': ['0', '0', '422.510.5', '10,000', '0', '0']
             })
-            st.write("Example data preview:")
-            st.dataframe(df_raw.head())
 
-        # show raw data and columns
-        with st.expander("Preview raw data (first 20 rows)"):
-            st.dataframe(df_raw.head(20))
-        st.write("Column names:")
-        st.write(list(df_raw.columns))
+            # Example data preview
+            st.markdown("### 🧾 Example Data Preview")
+            st.dataframe(df_raw.head(), use_container_width=True)
+
+        # --- 3️⃣ Data Summary ---
+        st.markdown("### 📊 Dataset Overview")
+        info_col1, info_col2 = st.columns(2)
+        with info_col1:
+            st.metric("📅 Total Rows", f"{df_raw.shape[0]:,}")
+        with info_col2:
+            st.metric("📈 Total Columns", f"{df_raw.shape[1]}")
+
+        # --- 4️⃣ Raw Data Preview (Expandable) ---
+        with st.expander("🔍 View Raw Data (First 20 Rows)"):
+            st.dataframe(df_raw.head(20), use_container_width=True)
+
+        # --- 5️⃣ Column List ---
+        st.markdown("### 🧩 Column Names")
+        col_df = pd.DataFrame({
+            "Column Name": df_raw.columns,
+            "Example Value": [str(df_raw[col].iloc[0]) if not df_raw[col].empty else "" for col in df_raw.columns]
+        })
+        st.table(col_df)
 
 # ------------------------------
 # Cleaning & EDA Tab
