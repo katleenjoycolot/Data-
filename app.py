@@ -234,8 +234,13 @@ tabs = st.tabs(["Data Upload", "Data Cleaning & EDA", "Clustering (KMeans)", "Fl
 # ------------------------------
 with tabs[0]:
     st.header("Data Upload")
+
+    # Initialize variables for table rows
+    table_rows = []
+
     if uploaded_file is None and not use_example:
-        st.info("Upload a CSV to begin or toggle 'Use example dataset' in the sidebar.")
+        # Single row with message
+        table_rows.append(f"<tr><td colspan='2' style='color:gray;'>Upload a CSV to begin or toggle 'Use example dataset' in the sidebar.</td></tr>")
     else:
         if uploaded_file is not None:
             try:
@@ -243,12 +248,12 @@ with tabs[0]:
                     df_raw = pd.read_excel(uploaded_file)
                 else:
                     df_raw = pd.read_csv(uploaded_file)
-                st.success(f"Loaded `{uploaded_file.name}` — {df_raw.shape[0]} rows, {df_raw.shape[1]} columns")
+                # Success message row
+                table_rows.append(f"<tr><td colspan='2' style='color:green;'>Loaded <code>{uploaded_file.name}</code> — {df_raw.shape[0]} rows, {df_raw.shape[1]} columns</td></tr>")
             except Exception as e:
                 st.error(f"Failed to read file: {e}")
                 st.stop()
         else:
-            # Create a minimal example dataset that mimics your structure
             st.info("Using a small synthetic example dataset (you should upload your real file for final results).")
             df_raw = pd.DataFrame({
                 'Year':[2018,2018,2019,2019,2020,2020],
@@ -262,15 +267,24 @@ with tabs[0]:
                 'Damage Infrastructure':['0','0','1,000','5,000','0','0'],
                 'Damage Agriculture':['0','0','422.510.5','10,000','0','0']
             })
-            st.write("Example data preview:")
-            st.table(df_raw.head())
+            table_rows.append(f"<tr><td colspan='2' style='color:gray;'>Using a small synthetic example dataset (you should upload your real file for final results).</td></tr>")
 
-        # show raw data and columns
-        with st.expander("Preview raw data (first 20 rows)"):
-            st.table(df_raw.head(20))
-        st.write("Column names:")
-        st.write(list(df_raw.columns))
+        # Add preview data as a nested HTML table inside one cell
+        preview_html = df_raw.head(20).to_html(index=False)
+        table_rows.append(f"<tr><td style='vertical-align:top;'><b>Preview raw data (first 20 rows):</b></td><td>{preview_html}</td></tr>")
 
+        # Add column names
+        cols_html = ", ".join(df_raw.columns)
+        table_rows.append(f"<tr><td><b>Column names:</b></td><td>{cols_html}</td></tr>")
+
+    # Compose full HTML table
+    full_table = f"""
+    <table border="1" cellpadding="6" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+        {''.join(table_rows)}
+    </table>
+    """
+
+    st.markdown(full_table, unsafe_allow_html=True)
 
 # ------------------------------
 # Cleaning & EDA Tab
