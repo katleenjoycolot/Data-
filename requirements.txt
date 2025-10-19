@@ -1,0 +1,18 @@
+# Core app
+streamlit==1.39.0
+pandas==2.2.3
+numpy==1.26.4
+
+# Visualization
+plotly==5.24.1
+matplotlib==3.9.2
+
+# Machine Learning & Stats
+scikit-learn==1.5.2
+statsmodels==0.14.4
+
+# Utility
+openpyxl==3.1.5
+
+# Optional (to avoid warnings and improve compatibility)
+protobuf==5.28.3
