@@ -20,6 +20,87 @@ from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 import matplotlib.pyplot as plt
 import warnings
 warnings.filterwarnings("ignore")
+# --- 🌸 Custom CSS: Pink Theme for Sidebar & Navigation ---
+st.markdown("""
+    <style>
+    /* Main page background */
+    .stApp {
+        background-color: #fff0f5; /* light pink background */
+    }
+
+    /* Sidebar */
+    section[data-testid="stSidebar"] {
+        background-color: #ffb6c1 !important; /* soft pink */
+        color: #000 !important; /* make text readable */
+    }
+
+    /* Sidebar text and labels */
+    section[data-testid="stSidebar"] * {
+        color: #000 !important;
+        font-weight: 600;
+    }
+
+    /* Sidebar header and titles */
+    [data-testid="stSidebar"] h1, 
+    [data-testid="stSidebar"] h2, 
+    [data-testid="stSidebar"] h3 {
+        color: #4b0082 !important; /* dark violet for good contrast */
+    }
+
+    /* Tabs (navigation bar) */
+    div[data-baseweb="tab-list"] {
+        background-color: #ff69b4 !important; /* hot pink */
+        border-radius: 8px;
+        padding: 5px;
+    }
+
+    /* Active tab */
+    button[data-baseweb="tab"] [data-testid="stMarkdownContainer"] p {
+        color: #fff !important; /* white text on pink */
+        font-weight: 700 !important;
+    }
+    button[data-baseweb="tab"][aria-selected="true"] {
+        background-color: #ff1493 !important; /* deeper pink for active tab */
+        border-radius: 8px;
+        color: white !important;
+    }
+
+    /* Non-active tabs */
+    button[data-baseweb="tab"][aria-selected="false"] {
+        background-color: #ffc0cb !important; /* lighter pink */
+        color: black !important;
+        opacity: 0.9;
+    }
+
+    /* Main title */
+    .main-title {
+        font-size: 2.2rem;
+        font-weight: 800;
+        text-align: center;
+        color: #c71585; /* medium violet red */
+        text-shadow: 1px 1px 2px #fff;
+        margin-bottom: 25px;
+    }
+
+    /* Metrics and tables */
+    .stMetric label, .stMetricValue {
+        color: #8b008b !important;
+        font-weight: 700;
+    }
+
+    /* Buttons */
+    .stButton>button {
+        background-color: #ff69b4 !important;
+        color: white !important;
+        font-weight: 700;
+        border-radius: 10px;
+        border: none;
+    }
+    .stButton>button:hover {
+        background-color: #ff1493 !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
 st.set_page_config(layout="wide", page_title="Flood Pattern Analysis Dashboard")
 
